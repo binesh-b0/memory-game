@@ -1,16 +1,16 @@
-import { useState } from 'react';
 
 type CardProps = {
   value: number;
+  isFlipped: boolean;
+  onClick: () => void;
 };
 
-export default function Card({ value }: CardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
+export default function Card({ value, isFlipped, onClick }: CardProps) {
 
   return (
     <div 
       className={`card ${isFlipped ? 'flipped' : ''}`}
-      onClick={() => setIsFlipped(!isFlipped)}
+      onClick = {onClick}
       style={{
         width: '100px',
         height: '100px',
