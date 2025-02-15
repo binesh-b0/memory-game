@@ -1,57 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import useGameLogic from './hooks/useGameLogic';
 import Card from './components/Card';
 
-type CardType = {
-  id: number;
-  value: number;
-  isFlipped: boolean;
-};
-
 export default function App() {
-  const [cards, setCards] = useState<CardType[]>([])
-  const [flippedIds, setFlippedIds] = useState<number[]>([]);
+  const { cards, matches, initializeGame, handleCardClick } = useGameLogic(3);
 
-  // initialize cards
+  // Initialize game on mount
   useEffect(() => {
-    const initialCards = [1,1,2,2,3,3,]
-    .map((value,id)=>({id,value,isFlipped:false}));
-    setCards(initialCards);
+    initializeGame();
   }, []);
 
-  const handleCardClick = (id:number) => {
-    if (flippedIds.length === 2 || flippedIds.includes(id)) return;
-    const newFlipped = [...flippedIds, id];
-    setFlippedIds(newFlipped);
-
-    // check if the flipped cards are a match
-    setTimeout(() => {
-      const [first, second] = newFlipped;
-      if (cards[first].value !== cards[second].value) {
-        setCards(cards.map(card => 
-          card.id === first || card.id === second
-          ? {...card, isFlipped:false}
-          : card
-        ));
-      }
-    }, 1000);
-  };
-
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '1rem',
-      maxWidth: '400px',
-      margin: '2rem auto'
+    <div style={{ 
+      textAlign: 'center',
+      padding: '2rem'
     }}>
-     {cards.map(card => (
-        <Card
-          key={card.id}
-          value={card.value}
-          isFlipped={card.isFlipped || flippedIds.includes(card.id)}
-          onClick={() => handleCardClick(card.id)}
-        />
-      ))}
+      <h1>Memory Game ({matches.length}/3 matched)</h1>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 100px)',
+        gap: '1rem',
+        justifyContent: 'center',
+        margin: '2rem 0'
+      }}>
+        {cards.map(card => (
+          <Card
+            key={card.id}
+            value={card.value}
+            isFlipped={card.isFlipped}
+            onClick={() => handleCardClick(card.id)}
+          />
+        ))}
+      </div>
+      <button 
+        onClick={initializeGame}
+        style={{
+          padding: '0.5rem 1rem',
+          fontSize: '1.1rem',
+          backgroundColor: '#2196F3',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        New Game
+      </button>
     </div>
   );
 }
