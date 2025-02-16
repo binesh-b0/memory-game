@@ -13,9 +13,13 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Tooltip
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const DIFFICULTY_SETTINGS = {
   easy: { pairs: 4, moveLimit: 20, timeLimit: 60 },
@@ -76,22 +80,29 @@ export default function App() {
   }, [moves, gameStarted]);
 
   return (
-    <Container maxWidth={false} sx={{ 
-      py: 4,
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      backgroundColor: '#f5f5f5'
-    }}>
-      <Paper elevation={3} sx={{ 
-        p: 3, 
-        mb: 3,
-        maxWidth: '800px',
-        margin: '0 auto',
-        width: '100%',
-        position: 'relative'
-      }}>
+    <Container 
+      maxWidth={false}
+      sx={{
+        py: 4,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#f5f5f5',
+        font:'popins'
+      }}
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          mb: 3,
+          maxWidth: '800px',
+          width: '100%',
+          position: 'relative'
+        }}
+      >
         {/* Game Over Overlay */}
         <Dialog open={showGameOver} onClose={() => setShowGameOver(false)}>
           <DialogTitle>
@@ -105,10 +116,12 @@ export default function App() {
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => {
-              initializeGame();
-              setShowGameOver(false);
-            }}>
+            <Button
+              onClick={() => {
+                initializeGame();
+                setShowGameOver(false);
+              }}
+            >
               Play Again
             </Button>
           </DialogActions>
@@ -116,9 +129,6 @@ export default function App() {
 
         {/* Header Section */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            Memory Game
-          </Typography>
           <Select
             value={difficulty}
             onChange={handleDifficultyChange}
@@ -131,36 +141,106 @@ export default function App() {
           </Select>
         </Box>
 
-        {/* Game Stats */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 3 }}>
-          <Box textAlign="center">
+        {/* Game Stats (Graphical Metrics) */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, mb: 3 }}>
+          {/* Time Left */}
+          <Tooltip title="Time Left" placement="top">
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
             <CircularProgress
               variant="determinate"
               value={(timeLeft / timeLimit) * 100}
               size={60}
               thickness={4}
-              sx={{ color: '#4CAF50', mb: 1 }}
+              color="primary"
             />
-            <Typography variant="body2">Time Left: {timeLeft}s</Typography>
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: 'absolute',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <AccessTimeIcon fontSize="small" />
+              <Typography variant="caption">{timeLeft}s</Typography>
+            </Box>
           </Box>
+          </Tooltip>
 
-          <Box textAlign="center">
-            <Typography variant="h5" gutterBottom>
-              Moves: {moves}/{moveLimit}
-            </Typography>
-            <Typography variant="h6">
-              Matched: {matches.length}/{pairs}
-            </Typography>
+          {/* Moves */}
+          <Tooltip title="Moves" placement="top">
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <CircularProgress
+              variant="determinate"
+              value={(moves / moveLimit) * 100}
+              size={60}
+              thickness={4}
+              color="secondary"
+            />
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: 'absolute',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <AutorenewIcon fontSize="small" />
+              <Typography variant="caption">{moves}</Typography>
+            </Box>
           </Box>
+          </Tooltip>
+
+          {/* Matched */}
+          <Tooltip title="Matches" placement="top">
+
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <CircularProgress
+              variant="determinate"
+              value={(matches.length / pairs) * 100}
+              size={60}
+              thickness={4}
+              sx={{ color: '#4caf50' }}
+              />
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: 'absolute',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              >
+              <CheckCircleIcon fontSize="small" />
+              <Typography variant="caption">{matches.length}</Typography>
+            </Box>
+          </Box>
+              </Tooltip>
         </Box>
 
         {/* Game Board */}
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(4, 1fr)', sm: 'repeat(6, 1fr)' },
-          gap: 2,
-          mb: 3
-        }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(4, 1fr)', sm: 'repeat(6, 1fr)' },
+            gap: 2,
+            mb: 3
+          }}
+        >
           {cards.map(card => (
             <Box key={card.id} sx={{ aspectRatio: '1' }}>
               <Card
