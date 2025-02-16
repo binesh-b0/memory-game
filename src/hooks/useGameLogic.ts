@@ -18,6 +18,7 @@ type GameLogicReturn = {
 };
 
 export default function useGameLogic(pairs: number): GameLogicReturn {
+  // Game states
   const [cards, setCards] = useState<Card[]>([]);
   const [flippedIds, setFlippedIds] = useState<number[]>([]);
   const [matches, setMatches] = useState<number[]>([]);
@@ -26,6 +27,7 @@ export default function useGameLogic(pairs: number): GameLogicReturn {
   const [resetTrigger, setResetTrigger] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Initialize game
   const initializeGame = useCallback(() => {
     const values = Array.from({ length: pairs }, (_, i) => i + 1).flatMap(n => [n, n]);
     const shuffled = [...values].sort(() => Math.random() - 0.5);
@@ -53,6 +55,7 @@ export default function useGameLogic(pairs: number): GameLogicReturn {
     setMoves(prev => prev + 1);
   }, [gameOver, flippedIds, cards]);
 
+  // Check for matches
   useEffect(() => {
     if (flippedIds.length === 2) {
       const [firstId, secondId] = flippedIds;

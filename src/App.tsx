@@ -214,7 +214,7 @@ export default function App() {
           </Tooltip>
 
           {/* Moves */}
-          <Tooltip title="Moves" placement="top">
+          <Tooltip title="Moves left" placement="top">
           <Box sx={{ position: 'relative', display: 'inline-flex' }}>
             <CircularProgress
               variant="determinate"
