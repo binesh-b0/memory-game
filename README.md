@@ -2,8 +2,8 @@
 
 A modern memory card matching game built with React, TypeScript, and Material-UI. Features animations, difficulty levels, and game statistics.
 
-
 ## Features ✨
+
 - 🔢 Three difficulty levels (Easy/Medium/Hard)
 - ⏳ Countdown timer with circular progress
 - 🎮 Move counter with limit
@@ -12,6 +12,7 @@ A modern memory card matching game built with React, TypeScript, and Material-UI
 - 📊 Material Design UI
 
 ## Technologies 🛠️
+
 - React + TypeScript
 - Vite
 - Material-UI (MUI)
@@ -19,16 +20,22 @@ A modern memory card matching game built with React, TypeScript, and Material-UI
 - React Hooks
 
 ## Installation 💻
+
 1. Clone repository:
+
 ```bash
 git clone https://github.com/binesh-b0/memory-game.git
 ```
+
 2.Install dependencies:
+
 ```bash
 cd memory-game
 npm install
 ```
+
 3.Start development server:
+
 ```bash
 npm run dev
 ```
