@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import useGameLogic from './hooks/useGameLogic';
+import { useHighScores } from './hooks/useHighScores';
 import Card from './components/Card';
 import {
   CircularProgress,
@@ -14,7 +15,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip
+  Tooltip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -35,6 +40,9 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [gameStarted, setGameStarted] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
+  const { highScores, addHighScore } = useHighScores();
+  const [modalOpen, setModalOpen] = useState(false);
+
 
   const handleDifficultyChange = (event: SelectChangeEvent<keyof typeof DIFFICULTY_SETTINGS>) => {
     setDifficulty(event.target.value as keyof typeof DIFFICULTY_SETTINGS);
@@ -63,6 +71,9 @@ export default function App() {
       setShowGameOver(true);
       setGameStarted(false);
     }
+    if (matches.length === pairs) {
+      addHighScore('Player', moves, timeLeft);
+    }
   }, [gameOver, timeLeft, moves, moveLimit]);
 
   // Reset game state
@@ -78,6 +89,11 @@ export default function App() {
       setGameStarted(true);
     }
   }, [moves, gameStarted]);
+
+  const latestHighScore = highScores.reduce((latest, score) => {
+    return score.moves < latest.moves ? score : latest;
+  }, highScores[0]);
+  
 
   return (
     <Container 
@@ -139,6 +155,31 @@ export default function App() {
             <MenuItem value="medium">Medium</MenuItem>
             <MenuItem value="hard">Hard</MenuItem>
           </Select>
+          {/* High Score */}
+          <Typography 
+          variant="h6"
+           sx={{ fontWeight: 'light', cursor: 'pointer' }}
+           onClick={() => setModalOpen(true)}
+           >
+            {latestHighScore ? `Top: ${latestHighScore.moves} moves` : 'No High Score'}
+          </Typography>
+          <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
+        <DialogTitle>High Scores</DialogTitle>
+        <DialogContent>
+          <List sx={{ p: 0 }} disablePadding>
+          {highScores.map((score, index) => (
+            <ListItem key={score.timestamp}>
+              <ListItemButton>
+              {index + 1}. {score.name} - {score.moves} moves
+              </ListItemButton>              
+            </ListItem>
+          ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setModalOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
         </Box>
 
         {/* Game Stats (Graphical Metrics) */}
