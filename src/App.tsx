@@ -18,7 +18,6 @@ import {
   Tooltip,
   List,
   ListItem,
-  ListItemText,
   ListItemButton
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
