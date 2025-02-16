@@ -2,6 +2,11 @@
 
 A modern memory card matching game built with React, TypeScript, and Material-UI. Features animations, difficulty levels, and game statistics.
 
+![Build Status](https://github.com/binesh-b0/memory-game/actions/workflows/deploy.yml/badge.svg)
+
+[Live Demo](https://binesh-b0.github.io/memory-game/)
+
+
 ## Features ✨
 
 - 🔢 Three difficulty levels (Easy/Medium/Hard)
