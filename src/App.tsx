@@ -1,51 +1,190 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useGameLogic from './hooks/useGameLogic';
 import Card from './components/Card';
+import {
+  CircularProgress,
+  Button,
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
+
+const DIFFICULTY_SETTINGS = {
+  easy: { pairs: 4, moveLimit: 20, timeLimit: 60 },
+  medium: { pairs: 6, moveLimit: 30, timeLimit: 90 },
+  hard: { pairs: 8, moveLimit: 40, timeLimit: 120 }
+};
 
 export default function App() {
-  const { cards, matches, initializeGame, handleCardClick } = useGameLogic(3);
+  // Game states
+  const [difficulty, setDifficulty] = useState<keyof typeof DIFFICULTY_SETTINGS>('easy');
+  const { pairs, moveLimit, timeLimit } = DIFFICULTY_SETTINGS[difficulty];
+  const { cards, matches, moves, gameOver, initializeGame, handleCardClick, resetTrigger } = useGameLogic(pairs);
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
 
-  // Initialize game on mount
+  const handleDifficultyChange = (event: SelectChangeEvent<keyof typeof DIFFICULTY_SETTINGS>) => {
+    setDifficulty(event.target.value as keyof typeof DIFFICULTY_SETTINGS);
+  };
+
+  // Timer management
   useEffect(() => {
-    initializeGame();
-  }, []);
+    if (!gameStarted || gameOver) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameStarted, gameOver]);
+
+  // Game over conditions
+  useEffect(() => {
+    if (gameOver || timeLeft === 0 || moves >= moveLimit) {
+      setShowGameOver(true);
+      setGameStarted(false);
+    }
+  }, [gameOver, timeLeft, moves, moveLimit]);
+
+  // Reset game state
+  useEffect(() => {
+    setTimeLeft(timeLimit);
+    setGameStarted(false);
+    setShowGameOver(false);
+  }, [resetTrigger, timeLimit]);
+
+  // Start game when first move is made
+  useEffect(() => {
+    if (moves > 0 && !gameStarted) {
+      setGameStarted(true);
+    }
+  }, [moves, gameStarted]);
 
   return (
-    <div style={{ 
-      textAlign: 'center',
-      padding: '2rem'
+    <Container maxWidth={false} sx={{ 
+      py: 4,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      backgroundColor: '#f5f5f5'
     }}>
-      <h1>Memory Game ({matches.length}/3 matched)</h1>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 100px)',
-        gap: '1rem',
-        justifyContent: 'center',
-        margin: '2rem 0'
+      <Paper elevation={3} sx={{ 
+        p: 3, 
+        mb: 3,
+        maxWidth: '800px',
+        margin: '0 auto',
+        width: '100%',
+        position: 'relative'
       }}>
-        {cards.map(card => (
-          <Card
-            key={card.id}
-            value={card.value}
-            isFlipped={card.isFlipped}
-            onClick={() => handleCardClick(card.id)}
-          />
-        ))}
-      </div>
-      <button 
-        onClick={initializeGame}
-        style={{
-          padding: '0.5rem 1rem',
-          fontSize: '1.1rem',
-          backgroundColor: '#2196F3',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        New Game
-      </button>
-    </div>
+        {/* Game Over Overlay */}
+        <Dialog open={showGameOver} onClose={() => setShowGameOver(false)}>
+          <DialogTitle>
+            {matches.length === pairs ? '🎉 Congratulations!' : 'Game Over'}
+          </DialogTitle>
+          <DialogContent>
+            {matches.length === pairs ? (
+              <Typography>You won in {moves} moves!</Typography>
+            ) : (
+              <Typography>Better luck next time!</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              initializeGame();
+              setShowGameOver(false);
+            }}>
+              Play Again
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Header Section */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1">
+            Memory Game
+          </Typography>
+          <Select
+            value={difficulty}
+            onChange={handleDifficultyChange}
+            size="small"
+            sx={{ minWidth: 120 }}
+          >
+            <MenuItem value="easy">Easy</MenuItem>
+            <MenuItem value="medium">Medium</MenuItem>
+            <MenuItem value="hard">Hard</MenuItem>
+          </Select>
+        </Box>
+
+        {/* Game Stats */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 3 }}>
+          <Box textAlign="center">
+            <CircularProgress
+              variant="determinate"
+              value={(timeLeft / timeLimit) * 100}
+              size={60}
+              thickness={4}
+              sx={{ color: '#4CAF50', mb: 1 }}
+            />
+            <Typography variant="body2">Time Left: {timeLeft}s</Typography>
+          </Box>
+
+          <Box textAlign="center">
+            <Typography variant="h5" gutterBottom>
+              Moves: {moves}/{moveLimit}
+            </Typography>
+            <Typography variant="h6">
+              Matched: {matches.length}/{pairs}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Game Board */}
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(4, 1fr)', sm: 'repeat(6, 1fr)' },
+          gap: 2,
+          mb: 3
+        }}>
+          {cards.map(card => (
+            <Box key={card.id} sx={{ aspectRatio: '1' }}>
+              <Card
+                value={card.value}
+                isFlipped={card.isFlipped}
+                isMatched={card.isMatched}
+                onClick={() => handleCardClick(card.id)}
+              />
+            </Box>
+          ))}
+        </Box>
+
+        {/* Controls */}
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={initializeGame}
+          fullWidth
+          size="large"
+          sx={{ mt: 2 }}
+        >
+          New Game
+        </Button>
+      </Paper>
+    </Container>
   );
 }
