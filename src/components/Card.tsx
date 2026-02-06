@@ -5,6 +5,8 @@ type CardProps = {
   value: number;
   isFlipped: boolean;
   isMatched: boolean;
+  shake?: boolean;
+  pulse?: boolean;
   onClick: () => void;
 };
 
@@ -48,7 +50,7 @@ const Face = styled('div')(({ theme }) => ({
   userSelect: 'none',
 }));
 
-export default function Card({ value, isFlipped, isMatched, onClick }: CardProps) {
+export default function Card({ value, isFlipped, isMatched, shake = false, pulse = false, onClick }: CardProps) {
   const theme = useTheme();
   const faces = ['🧠', '⚡', '🌙', '🔥', '🎧', '🧩', '🍀', '🚀'];
   const face = faces[value - 1] ?? '⭐';
@@ -66,6 +68,11 @@ export default function Card({ value, isFlipped, isMatched, onClick }: CardProps
       disabled={isMatched}
       whileHover={!isMatched ? { y: -2 } : undefined}
       whileTap={!isMatched ? { scale: 0.98 } : undefined}
+      animate={{
+        x: shake ? [0, -6, 6, -4, 4, 0] : 0,
+        scale: isMatched ? 0.97 : pulse ? 1.03 : 1,
+      }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
       aria-label={isFlipped ? `Card ${face}` : 'Hidden card'}
     >
       <CardInner

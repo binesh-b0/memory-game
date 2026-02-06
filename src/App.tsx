@@ -41,7 +41,7 @@ type Difficulty = keyof typeof DIFFICULTY_SETTINGS;
 export default function App() {
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const { pairs, moveLimit, timeLimit } = DIFFICULTY_SETTINGS[difficulty];
-  const { cards, matches, moves, gameOver, initializeGame, handleCardClick, resetTrigger } = useGameLogic(pairs);
+  const { cards, matches, moves, gameOver, initializeGame, handleCardClick, resetTrigger, isRevealing, shakeIds, pulseIds } = useGameLogic(pairs);
   const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
   const [gameStarted, setGameStarted] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
@@ -51,7 +51,7 @@ export default function App() {
   const initializeGameRef = useRef(initializeGame);
   const prevDifficultyRef = useRef<Difficulty>(difficulty);
 
-  const difficultyLocked = moves > 0 && !showGameOver;
+  const difficultyLocked = (moves > 0 || isRevealing) && !showGameOver;
 
   useEffect(() => {
     initializeGameRef.current = initializeGame;
@@ -250,6 +250,7 @@ export default function App() {
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}>
             <Chip label={`${pairs * 2} cards`} variant="outlined" />
             <Chip label={`${movesLeft} moves left`} variant="outlined" />
+            {isRevealing ? <Chip label="Memorize" color="secondary" /> : null}
           </Stack>
         </Stack>
 
@@ -341,6 +342,8 @@ export default function App() {
                 value={card.value}
                 isFlipped={card.isFlipped}
                 isMatched={card.isMatched}
+                shake={shakeIds.includes(card.id)}
+                pulse={pulseIds.includes(card.id)}
                 onClick={() => handleCardClick(card.id)}
               />
             </Box>
