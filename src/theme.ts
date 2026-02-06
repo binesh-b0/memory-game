@@ -45,6 +45,47 @@ export const theme = createTheme({
     MuiButton: {
       defaultProps: { disableElevation: true },
     },
+    MuiChip: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          backgroundColor: alpha(theme.palette.common.white, 0.03),
+          borderColor: alpha(theme.palette.common.white, 0.14),
+        }),
+      },
+    },
+    MuiToggleButtonGroup: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          padding: 2,
+          borderRadius: 14,
+          backgroundColor: alpha(theme.palette.common.white, 0.035),
+          border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+        }),
+        grouped: {
+          margin: 2,
+          border: 0,
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          border: 0,
+          color: theme.palette.text.secondary,
+          '&:hover': {
+            backgroundColor: alpha(theme.palette.common.white, 0.06),
+          },
+          '&.Mui-selected': {
+            color: theme.palette.common.white,
+            backgroundColor: alpha(theme.palette.primary.main, 0.24),
+          },
+          '&.Mui-selected:hover': {
+            backgroundColor: alpha(theme.palette.primary.main, 0.3),
+          },
+        }),
+      },
+    },
     MuiPaper: {
       styleOverrides: {
         root: {
@@ -53,6 +94,13 @@ export const theme = createTheme({
         },
       },
     },
+    MuiDialog: {
+      styleOverrides: {
+        paper: ({ theme }) => ({
+          borderRadius: 18,
+          border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+        }),
+      },
+    },
   },
 });
-
