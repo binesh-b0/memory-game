@@ -68,7 +68,9 @@ export default function Card({ value, isFlipped, isMatched, shake = false, pulse
       disabled={isMatched}
       whileHover={!isMatched ? { y: -2 } : undefined}
       whileTap={!isMatched ? { scale: 0.98 } : undefined}
+      initial={{ opacity: 0, scale: 0.92 }}
       animate={{
+        opacity: 1,
         x: shake ? [0, -6, 6, -4, 4, 0] : 0,
         scale: isMatched ? 0.97 : pulse ? 1.03 : 1,
       }}

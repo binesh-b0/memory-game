@@ -4,6 +4,7 @@ import { useHighScores } from './hooks/useHighScores';
 import Card from './components/Card';
 import BackgroundParticles from './components/BackgroundParticles';
 import WinConfetti from './components/WinConfetti';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Button,
   Container,
@@ -330,30 +331,38 @@ export default function App() {
           ))}
         </Stack>
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: boardColumns,
-            gap: { xs: 1.25, sm: 1.75 },
-            p: { xs: 1.25, sm: 2 },
-            borderRadius: 3,
-            backgroundColor: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          {cards.map(card => (
-            <Box key={card.id} sx={{ aspectRatio: '1' }}>
-              <Card
-                value={card.value}
-                isFlipped={card.isFlipped}
-                isMatched={card.isMatched}
-                shake={shakeIds.includes(card.id)}
-                pulse={pulseIds.includes(card.id)}
-                onClick={() => handleCardClick(card.id)}
-              />
-            </Box>
-          ))}
-        </Box>
+        <AnimatePresence mode="wait">
+          <Box
+            key={`${difficulty}-${resetTrigger ? 1 : 0}`}
+            component={motion.div}
+            initial={{ opacity: 0, y: 10, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.985 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: boardColumns,
+              gap: { xs: 1.25, sm: 1.75 },
+              p: { xs: 1.25, sm: 2 },
+              borderRadius: 3,
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {cards.map(card => (
+              <Box key={card.id} sx={{ aspectRatio: '1' }}>
+                <Card
+                  value={card.value}
+                  isFlipped={card.isFlipped}
+                  isMatched={card.isMatched}
+                  shake={shakeIds.includes(card.id)}
+                  pulse={pulseIds.includes(card.id)}
+                  onClick={() => handleCardClick(card.id)}
+                />
+              </Box>
+            ))}
+          </Box>
+        </AnimatePresence>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2 }}>
           <Button variant="contained" onClick={initializeGame} fullWidth size="large">
