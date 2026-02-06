@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import useGameLogic from './hooks/useGameLogic';
 import { useHighScores } from './hooks/useHighScores';
 import useSfx from './hooks/useSfx';
@@ -6,6 +6,8 @@ import Card from './components/Card';
 import BackgroundParticles from './components/BackgroundParticles';
 import WinConfetti from './components/WinConfetti';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Button,
   Container,
@@ -46,6 +48,8 @@ const DIFFICULTY_SETTINGS = {
 type Difficulty = keyof typeof DIFFICULTY_SETTINGS;
 
 export default function App() {
+  const theme = useTheme();
+  const smUp = useMediaQuery(theme.breakpoints.up('sm'));
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const { pairs, moveLimit, timeLimit } = DIFFICULTY_SETTINGS[difficulty];
   const { cards, matches, moves, gameOver, initializeGame, handleCardClick, resetTrigger, isRevealing, shakeIds, pulseIds } = useGameLogic(pairs);
@@ -61,6 +65,8 @@ export default function App() {
   const initializeGameRef = useRef(initializeGame);
   const prevDifficultyRef = useRef<Difficulty>(difficulty);
   const prevOverlayRef = useRef(false);
+  const boardAreaRef = useRef<HTMLDivElement | null>(null);
+  const [boardSize, setBoardSize] = useState<{ w: number; h: number } | null>(null);
 
   const gameLocked = (moves > 0 || isRevealing) && !showGameOver;
   const inputLocked = isRevealing || showGameOver || gameOver || shakeIds.length === 2 || pulseIds.length === 2;
@@ -145,10 +151,34 @@ export default function App() {
   const boardColsSm = difficulty === 'medium' ? 6 : 4;
   const boardRowsXs = Math.ceil(cardCount / boardColsXs);
   const boardRowsSm = Math.ceil(cardCount / boardColsSm);
+  const cols = smUp ? boardColsSm : boardColsXs;
+  const rows = smUp ? boardRowsSm : boardRowsXs;
   const hasWon = matches.length === pairs;
   const outOfTime = timeLeft === 0;
   const outOfMoves = moves >= moveLimit;
   const showBestLabel = bestScore ? `Best: ${bestScore.moves} moves` : 'No scores yet';
+
+  useLayoutEffect(() => {
+    const el = boardAreaRef.current;
+    if (!el) return;
+
+    const ratio = cols / rows;
+    const ro = new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect;
+      if (!rect) return;
+
+      const pad = 8;
+      const maxW = Math.max(0, rect.width - pad * 2);
+      const maxH = Math.max(0, rect.height - pad * 2);
+
+      const w = Math.min(maxW, maxH * ratio);
+      const h = w / ratio;
+      setBoardSize({ w: Math.floor(w), h: Math.floor(h) });
+    });
+
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [cols, rows]);
 
   useEffect(() => {
     if (prevOverlayRef.current === showGameOver) return;
@@ -406,7 +436,7 @@ export default function App() {
           ))}
         </Stack>
 
-        <Box sx={{ flex: 1, minHeight: 0, display: 'grid', placeItems: 'center', py: 1 }}>
+        <Box ref={boardAreaRef} sx={{ flex: 1, minHeight: 0, display: 'grid', placeItems: 'center', py: 1 }}>
           <AnimatePresence mode="wait">
             <Box
               key={`${difficulty}-${resetTrigger ? 1 : 0}`}
@@ -416,12 +446,13 @@ export default function App() {
               exit={{ opacity: 0, y: -8, scale: 0.985 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
               sx={{
-                height: '100%',
+                width: boardSize ? `${boardSize.w}px` : '100%',
+                height: boardSize ? `${boardSize.h}px` : '100%',
                 maxWidth: '100%',
-                aspectRatio: { xs: `${boardColsXs}/${boardRowsXs}`, sm: `${boardColsSm}/${boardRowsSm}` },
+                maxHeight: '100%',
                 display: 'grid',
-                gridTemplateColumns: { xs: `repeat(${boardColsXs}, 1fr)`, sm: `repeat(${boardColsSm}, 1fr)` },
-                gridAutoRows: '1fr',
+                gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                gridTemplateRows: `repeat(${rows}, 1fr)`,
                 gap: { xs: 0.9, sm: 1.2 },
                 p: { xs: 1, sm: 1.25 },
                 borderRadius: 2,
