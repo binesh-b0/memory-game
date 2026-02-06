@@ -96,26 +96,23 @@ export default function App() {
 
   return (
     <Container 
-      maxWidth={false}
+      maxWidth="md"
       sx={{
-        py: 4,
+        py: { xs: 3, sm: 5 },
         minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center', 
-        justifyContent: 'center',
-        backgroundColor: '#f5f5f5',
-        font:'popins'
+        display: 'grid',
+        placeItems: 'center',
       }}
     >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
-          p: 3,
-          mb: 3,
-          maxWidth: '800px',
+          p: { xs: 2, sm: 3 },
           width: '100%',
-          position: 'relative'
+          position: 'relative',
+          borderRadius: 4,
+          boxShadow: '0 22px 70px rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(14px)',
         }}
       >
         {/* Game Over Overlay */}
