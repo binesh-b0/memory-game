@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { alpha, styled, useTheme } from '@mui/material/styles';
 
 type CardProps = {
   value: number;
@@ -7,85 +8,86 @@ type CardProps = {
   onClick: () => void;
 };
 
+const CardButton = styled(motion.button)(({ theme }) => ({
+  width: '100%',
+  height: '100%',
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
+  display: 'block',
+  perspective: 1000,
+  WebkitTapHighlightColor: 'transparent',
+  borderRadius: theme.shape.borderRadius,
+  '&:disabled': {
+    cursor: 'default',
+  },
+  '&:focus-visible': {
+    outline: `3px solid ${alpha(theme.palette.primary.main, 0.6)}`,
+    outlineOffset: 2,
+  },
+}));
+
+const CardInner = styled(motion.div)(({ theme }) => ({
+  position: 'relative',
+  width: '100%',
+  height: '100%',
+  transformStyle: 'preserve-3d',
+  borderRadius: theme.shape.borderRadius,
+}));
+
+const Face = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  inset: 0,
+  backfaceVisibility: 'hidden',
+  display: 'grid',
+  placeItems: 'center',
+  borderRadius: theme.shape.borderRadius,
+  border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`,
+  boxShadow: `0 12px 30px ${alpha('#000', 0.35)}`,
+  userSelect: 'none',
+}));
+
 export default function Card({ value, isFlipped, isMatched, onClick }: CardProps) {
+  const theme = useTheme();
+  const faces = ['🧠', '⚡', '🌙', '🔥', '🎧', '🧩', '🍀', '🚀'];
+  const face = faces[value - 1] ?? '⭐';
+
+  const backGradient = isMatched
+    ? `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.95)}, ${alpha(theme.palette.success.dark, 0.9)})`
+    : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.95)}, ${alpha(theme.palette.secondary.main, 0.9)})`;
+
+  const frontBg = `linear-gradient(180deg, ${alpha(theme.palette.common.white, 0.06)}, ${alpha(theme.palette.common.white, 0.03)})`;
+
   return (
-    <motion.div
+    <CardButton
+      type="button"
       onClick={!isMatched ? onClick : undefined}
-      style={{
-        width: '100%',
-        height: '100%',
-        perspective: '1000px',
-        cursor: isMatched ? 'default' : 'pointer'
-      }}
-      animate={{
-        rotateY: isFlipped ? 180 : 0,
-        scale: isMatched ? 0.95 : 1
-
-      }}
-      transition={{ duration: 0.6 }}
+      disabled={isMatched}
+      whileHover={!isMatched ? { y: -2 } : undefined}
+      whileTap={!isMatched ? { scale: 0.98 } : undefined}
+      aria-label={isFlipped ? `Card ${face}` : 'Hidden card'}
     >
-      {/* Card Container */}
-      <motion.div
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          minWidth: '80px',
-          transformStyle: 'preserve-3d',
-        }}
+      <CardInner
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ type: 'spring', stiffness: 520, damping: 38 }}
       >
-        {/* Front Face - Question Mark */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backfaceVisibility: 'hidden',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            border: '2px solid #e0e0e0',
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-          }}
-          animate={{
-             rotateY: isFlipped ? 180 : 0, 
-             scaleX: isFlipped ? -1 : 1  // Fix mirror effect
-
+        <Face style={{ background: frontBg }}>
+          <span
+            style={{
+              fontSize: '1.6rem',
+              fontWeight: 800,
+              letterSpacing: -0.6,
+              color: alpha(theme.palette.common.white, 0.85),
             }}
-        >
-          ?
-        </motion.div>
-        
-        {/* Back Face - Card Value */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backfaceVisibility: 'hidden',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: isMatched ? '#4CAF50' : '#2196F3',
-            borderRadius: '8px',
-            color: 'white',
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            transform: 'rotateY(180deg)',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-          }}
-          animate={{ 
-            rotateY: isFlipped ? 0 : 180,
-            scaleX: isFlipped ? -1 : 1  // Fix mirror effect
-          }}
-        >
-          {value}
-        </motion.div>
-      </motion.div>
-    </motion.div>
+          >
+            ?
+          </span>
+        </Face>
+        <Face style={{ transform: 'rotateY(180deg)', background: backGradient }}>
+          <span style={{ fontSize: '2.1rem', lineHeight: 1 }}>{face}</span>
+        </Face>
+      </CardInner>
+    </CardButton>
   );
 }
