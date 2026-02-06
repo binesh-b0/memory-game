@@ -8,6 +8,7 @@ import WinConfetti from './components/WinConfetti';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import type { ThemeId } from './theme';
 import {
   Button,
   Container,
@@ -38,6 +39,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import PaletteIcon from '@mui/icons-material/Palette';
 
 const DIFFICULTY_SETTINGS = {
   easy: { pairs: 4, moveLimit: 20, timeLimit: 60 },
@@ -47,7 +49,15 @@ const DIFFICULTY_SETTINGS = {
 
 type Difficulty = keyof typeof DIFFICULTY_SETTINGS;
 
-export default function App() {
+export default function App({
+  themeId,
+  setThemeId,
+  themeOptions,
+}: {
+  themeId: ThemeId;
+  setThemeId: (id: ThemeId) => void;
+  themeOptions: Array<{ id: ThemeId; label: string }>;
+}) {
   const theme = useTheme();
   const smUp = useMediaQuery(theme.breakpoints.up('sm'));
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
@@ -61,6 +71,7 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [newGameOpen, setNewGameOpen] = useState(false);
   const [nextDifficulty, setNextDifficulty] = useState<Difficulty>(difficulty);
+  const [themeOpen, setThemeOpen] = useState(false);
   const savedScoreRef = useRef(false);
   const initializeGameRef = useRef(initializeGame);
   const prevDifficultyRef = useRef<Difficulty>(difficulty);
@@ -320,6 +331,32 @@ export default function App() {
           </DialogActions>
         </Dialog>
 
+        <Dialog open={themeOpen} onClose={() => setThemeOpen(false)} fullWidth maxWidth="xs">
+          <DialogTitle>Theme</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <ToggleButtonGroup
+                value={themeId}
+                exclusive
+                onChange={(_, value: ThemeId | null) => value && setThemeId(value)}
+                size="small"
+                fullWidth
+              >
+                {themeOptions.map(t => (
+                  <ToggleButton key={t.id} value={t.id}>
+                    {t.label}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setThemeOpen(false)} variant="outlined" size="small">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between">
           <Box>
             <Typography variant="h4">Memory match</Typography>
@@ -340,6 +377,11 @@ export default function App() {
                   <RestartAltIcon />
                 </IconButton>
               </span>
+            </Tooltip>
+            <Tooltip title="Theme">
+              <IconButton onClick={() => setThemeOpen(true)} aria-label="Theme">
+                <PaletteIcon />
+              </IconButton>
             </Tooltip>
             <Tooltip title={sfxEnabled ? 'Sound on' : 'Sound off'}>
               <IconButton onClick={toggleSfx} aria-label="Toggle sound">
