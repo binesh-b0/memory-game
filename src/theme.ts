@@ -49,8 +49,7 @@ export const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: ({ theme }) => ({
-          backgroundColor: alpha(theme.palette.common.white, 0.03),
-          borderColor: alpha(theme.palette.common.white, 0.14),
+          backgroundColor: alpha(theme.palette.common.white, 0.045),
         }),
       },
     },
@@ -60,7 +59,7 @@ export const theme = createTheme({
           padding: 2,
           borderRadius: 12,
           backgroundColor: alpha(theme.palette.common.white, 0.035),
-          border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+          border: 0,
         }),
         grouped: {
           margin: 2,
@@ -89,17 +88,17 @@ export const theme = createTheme({
     },
     MuiPaper: {
       styleOverrides: {
-        root: {
+        root: ({ ownerState }) => ({
           backgroundImage: 'none',
-          border: `1px solid ${alpha('#ffffff', 0.08)}`,
-        },
+          border: ownerState.variant === 'outlined' ? `1px solid ${alpha('#ffffff', 0.06)}` : 'none',
+        }),
       },
     },
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
           borderRadius: 14,
-          border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+          border: `1px solid ${alpha(theme.palette.common.white, 0.06)}`,
         }),
       },
     },

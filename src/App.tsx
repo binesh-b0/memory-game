@@ -227,9 +227,9 @@ export default function App() {
                 {hasWon ? 'Clean match.' : outOfTime ? 'Out of time.' : outOfMoves ? 'Out of moves.' : 'Try again.'}
               </Typography>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                <Chip icon={<AutorenewIcon />} label={`${moves} moves`} variant="outlined" />
-                <Chip icon={<AccessTimeIcon />} label={`${timeLeft}s left`} variant="outlined" />
-                <Chip icon={<CheckCircleIcon />} label={`${matches.length}/${pairs} matched`} variant="outlined" />
+                <Chip icon={<AutorenewIcon />} label={`${moves} moves`} />
+                <Chip icon={<AccessTimeIcon />} label={`${timeLeft}s left`} />
+                <Chip icon={<CheckCircleIcon />} label={`${matches.length}/${pairs} matched`} />
               </Stack>
             </Stack>
           </DialogContent>
@@ -293,9 +293,9 @@ export default function App() {
                 <ToggleButton value="hard">Hard</ToggleButton>
               </ToggleButtonGroup>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].pairs * 2} cards`} variant="outlined" />
-                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].moveLimit} moves`} variant="outlined" />
-                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].timeLimit}s`} variant="outlined" />
+                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].pairs * 2} cards`} />
+                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].moveLimit} moves`} />
+                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].timeLimit}s`} />
               </Stack>
             </Stack>
           </DialogContent>
@@ -357,10 +357,10 @@ export default function App() {
         <Divider sx={{ my: 2 }} />
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
-          <Chip icon={<EmojiEventsIcon />} label={showBestLabel} variant="outlined" />
+          <Chip icon={<EmojiEventsIcon />} label={showBestLabel} />
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}>
-            <Chip label={`${pairs * 2} cards`} variant="outlined" />
-            <Chip label={`${movesLeft} moves left`} variant="outlined" />
+            <Chip label={`${pairs * 2} cards`} />
+            <Chip label={`${movesLeft} moves left`} />
             {isRevealing ? <Chip label="Memorize" color="secondary" /> : null}
           </Stack>
         </Stack>
@@ -394,12 +394,12 @@ export default function App() {
           ].map(stat => (
             <Paper
               key={stat.key}
-              variant="outlined"
               sx={{
                 flex: 1,
                 p: 1.25,
                 borderRadius: 2.5,
                 backgroundColor: 'rgba(255,255,255,0.03)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)',
               }}
             >
               <Stack direction="row" spacing={1.25} alignItems="center">
@@ -457,7 +457,7 @@ export default function App() {
                 p: { xs: 1, sm: 1.25 },
                 borderRadius: 2,
                 backgroundColor: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.03)',
               }}
             >
               {cards.map(card => (

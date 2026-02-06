@@ -45,7 +45,7 @@ const Face = styled('div')(({ theme }) => ({
   display: 'grid',
   placeItems: 'center',
   borderRadius: theme.shape.borderRadius,
-  border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`,
+  border: `1px solid ${alpha(theme.palette.common.white, 0.07)}`,
   boxShadow: `0 12px 30px ${alpha('#000', 0.35)}`,
   userSelect: 'none',
 }));
