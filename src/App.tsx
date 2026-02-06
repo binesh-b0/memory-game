@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import useGameLogic from './hooks/useGameLogic';
 import { useHighScores } from './hooks/useHighScores';
 import Card from './components/Card';
+import BackgroundParticles from './components/BackgroundParticles';
+import WinConfetti from './components/WinConfetti';
 import {
   Button,
   Container,
@@ -138,6 +140,8 @@ export default function App() {
         overflow: 'hidden',
       }}
     >
+      <BackgroundParticles />
+      <WinConfetti active={showGameOver && hasWon} />
       <Paper
         elevation={0}
         sx={{
@@ -150,6 +154,7 @@ export default function App() {
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          zIndex: 1,
         }}
       >
         <Dialog open={showGameOver} onClose={() => setShowGameOver(false)}>
