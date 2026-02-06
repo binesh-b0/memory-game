@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useGameLogic from './hooks/useGameLogic';
 import { useHighScores } from './hooks/useHighScores';
+import useSfx from './hooks/useSfx';
 import Card from './components/Card';
 import BackgroundParticles from './components/BackgroundParticles';
 import WinConfetti from './components/WinConfetti';
@@ -33,6 +34,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 
 const DIFFICULTY_SETTINGS = {
   easy: { pairs: 4, moveLimit: 20, timeLimit: 60 },
@@ -50,14 +53,17 @@ export default function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const { highScores, addHighScore } = useHighScores();
+  const { enabled: sfxEnabled, toggle: toggleSfx, flip: playFlip, match: playMatch, miss: playMiss, win: playWin, lose: playLose } = useSfx();
   const [modalOpen, setModalOpen] = useState(false);
   const [newGameOpen, setNewGameOpen] = useState(false);
   const [nextDifficulty, setNextDifficulty] = useState<Difficulty>(difficulty);
   const savedScoreRef = useRef(false);
   const initializeGameRef = useRef(initializeGame);
   const prevDifficultyRef = useRef<Difficulty>(difficulty);
+  const prevOverlayRef = useRef(false);
 
   const gameLocked = (moves > 0 || isRevealing) && !showGameOver;
+  const inputLocked = isRevealing || showGameOver || gameOver || shakeIds.length === 2 || pulseIds.length === 2;
 
   useEffect(() => {
     initializeGameRef.current = initializeGame;
@@ -120,6 +126,14 @@ export default function App() {
     }
   }, [moves, gameStarted]);
 
+  useEffect(() => {
+    if (shakeIds.length === 2) playMiss();
+  }, [playMiss, shakeIds.length]);
+
+  useEffect(() => {
+    if (pulseIds.length === 2) playMatch();
+  }, [playMatch, pulseIds.length]);
+
   const bestScore = useMemo(() => {
     if (highScores.length === 0) return null;
     return [...highScores].sort((a, b) => a.moves - b.moves)[0];
@@ -135,6 +149,14 @@ export default function App() {
   const outOfTime = timeLeft === 0;
   const outOfMoves = moves >= moveLimit;
   const showBestLabel = bestScore ? `Best: ${bestScore.moves} moves` : 'No scores yet';
+
+  useEffect(() => {
+    if (prevOverlayRef.current === showGameOver) return;
+    prevOverlayRef.current = showGameOver;
+    if (!showGameOver) return;
+    if (hasWon) playWin();
+    else playLose();
+  }, [hasWon, playLose, playWin, showGameOver]);
 
   return (
     <Container 
@@ -287,6 +309,11 @@ export default function App() {
                 </IconButton>
               </span>
             </Tooltip>
+            <Tooltip title={sfxEnabled ? 'Sound on' : 'Sound off'}>
+              <IconButton onClick={toggleSfx} aria-label="Toggle sound">
+                {sfxEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title="High scores">
               <IconButton onClick={() => setModalOpen(true)} aria-label="High scores">
                 <LeaderboardIcon />
@@ -408,7 +435,10 @@ export default function App() {
                     isMatched={card.isMatched}
                     shake={shakeIds.includes(card.id)}
                     pulse={pulseIds.includes(card.id)}
-                    onClick={() => handleCardClick(card.id)}
+                    onClick={() => {
+                      if (!inputLocked && !card.isFlipped && !card.isMatched) playFlip();
+                      handleCardClick(card.id);
+                    }}
                   />
                 </Box>
               ))}
