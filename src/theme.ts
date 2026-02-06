@@ -10,7 +10,7 @@ export const theme = createTheme({
       paper: alpha('#0B1020', 0.78),
     },
   },
-  shape: { borderRadius: 16 },
+  shape: { borderRadius: 12 },
   typography: {
     fontFamily: [
       'Inter',

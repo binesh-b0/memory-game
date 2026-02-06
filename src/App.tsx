@@ -32,6 +32,7 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const DIFFICULTY_SETTINGS = {
   easy: { pairs: 4, moveLimit: 20, timeLimit: 60 },
@@ -50,11 +51,13 @@ export default function App() {
   const [showGameOver, setShowGameOver] = useState(false);
   const { highScores, addHighScore } = useHighScores();
   const [modalOpen, setModalOpen] = useState(false);
+  const [newGameOpen, setNewGameOpen] = useState(false);
+  const [nextDifficulty, setNextDifficulty] = useState<Difficulty>(difficulty);
   const savedScoreRef = useRef(false);
   const initializeGameRef = useRef(initializeGame);
   const prevDifficultyRef = useRef<Difficulty>(difficulty);
 
-  const difficultyLocked = (moves > 0 || isRevealing) && !showGameOver;
+  const gameLocked = (moves > 0 || isRevealing) && !showGameOver;
 
   useEffect(() => {
     initializeGameRef.current = initializeGame;
@@ -123,7 +126,11 @@ export default function App() {
   }, [highScores]);
 
   const movesLeft = Math.max(moveLimit - moves, 0);
-  const boardColumns = difficulty === 'medium' ? { xs: 'repeat(4, 1fr)', sm: 'repeat(6, 1fr)' } : { xs: 'repeat(4, 1fr)', sm: 'repeat(4, 1fr)' };
+  const cardCount = pairs * 2;
+  const boardColsXs = 4;
+  const boardColsSm = difficulty === 'medium' ? 6 : 4;
+  const boardRowsXs = Math.ceil(cardCount / boardColsXs);
+  const boardRowsSm = Math.ceil(cardCount / boardColsSm);
   const hasWon = matches.length === pairs;
   const outOfTime = timeLeft === 0;
   const outOfMoves = moves >= moveLimit;
@@ -136,8 +143,9 @@ export default function App() {
         py: { xs: 2, sm: 3 },
         height: '100dvh',
         maxHeight: '100dvh',
-        display: 'grid',
-        placeItems: 'center',
+        display: 'flex',
+        alignItems: 'stretch',
+        justifyContent: 'center',
         overflow: 'hidden',
       }}
     >
@@ -149,13 +157,14 @@ export default function App() {
           p: { xs: 2, sm: 3 },
           width: '100%',
           position: 'relative',
-          borderRadius: 4,
+          borderRadius: 3,
           boxShadow: '0 22px 70px rgba(0,0,0,0.55)',
           backdropFilter: 'blur(14px)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 1,
+          minHeight: 0,
         }}
       >
         <Dialog open={showGameOver} onClose={() => setShowGameOver(false)}>
@@ -215,31 +224,68 @@ export default function App() {
           </DialogActions>
         </Dialog>
 
+        <Dialog open={newGameOpen} onClose={() => setNewGameOpen(false)} fullWidth maxWidth="xs">
+          <DialogTitle>New game</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <ToggleButtonGroup
+                value={nextDifficulty}
+                exclusive
+                onChange={(_, value: Difficulty | null) => value && setNextDifficulty(value)}
+                size="small"
+                fullWidth
+              >
+                <ToggleButton value="easy">Easy</ToggleButton>
+                <ToggleButton value="medium">Medium</ToggleButton>
+                <ToggleButton value="hard">Hard</ToggleButton>
+              </ToggleButtonGroup>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].pairs * 2} cards`} variant="outlined" />
+                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].moveLimit} moves`} variant="outlined" />
+                <Chip label={`${DIFFICULTY_SETTINGS[nextDifficulty].timeLimit}s`} variant="outlined" />
+              </Stack>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setNewGameOpen(false)} variant="outlined">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setNewGameOpen(false);
+                if (nextDifficulty !== difficulty) {
+                  setDifficulty(nextDifficulty);
+                  return;
+                }
+                initializeGame();
+              }}
+              variant="contained"
+            >
+              Start
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between">
           <Box>
             <Typography variant="h4">Memory match</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
               Flip two cards. Match all pairs before time or moves run out.
             </Typography>
           </Box>
-          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-            <Tooltip title={difficultyLocked ? 'Difficulty is locked during a game' : 'Difficulty'}>
-              <Box>
-                <ToggleButtonGroup
-                  value={difficulty}
-                  exclusive
-                  onChange={(_, value: Difficulty | null) => {
-                    if (!value || difficultyLocked) return;
-                    setDifficulty(value);
+          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="space-between">
+            <Tooltip title={gameLocked ? 'Start a new game' : 'New game'}>
+              <span>
+                <IconButton
+                  onClick={() => {
+                    setNextDifficulty(difficulty);
+                    setNewGameOpen(true);
                   }}
-                  size="small"
-                  disabled={difficultyLocked}
+                  aria-label="New game"
                 >
-                  <ToggleButton value="easy">Easy</ToggleButton>
-                  <ToggleButton value="medium">Medium</ToggleButton>
-                  <ToggleButton value="hard">Hard</ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
+                  <RestartAltIcon />
+                </IconButton>
+              </span>
             </Tooltip>
             <Tooltip title="High scores">
               <IconButton onClick={() => setModalOpen(true)} aria-label="High scores">
@@ -331,47 +377,45 @@ export default function App() {
           ))}
         </Stack>
 
-        <AnimatePresence mode="wait">
-          <Box
-            key={`${difficulty}-${resetTrigger ? 1 : 0}`}
-            component={motion.div}
-            initial={{ opacity: 0, y: 10, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.985 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: boardColumns,
-              gap: { xs: 1.25, sm: 1.75 },
-              p: { xs: 1.25, sm: 2 },
-              borderRadius: 3,
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            {cards.map(card => (
-              <Box key={card.id} sx={{ aspectRatio: '1' }}>
-                <Card
-                  value={card.value}
-                  isFlipped={card.isFlipped}
-                  isMatched={card.isMatched}
-                  shake={shakeIds.includes(card.id)}
-                  pulse={pulseIds.includes(card.id)}
-                  onClick={() => handleCardClick(card.id)}
-                />
-              </Box>
-            ))}
-          </Box>
-        </AnimatePresence>
+        <Box sx={{ flex: 1, minHeight: 0, display: 'grid', placeItems: 'center', py: 1 }}>
+          <AnimatePresence mode="wait">
+            <Box
+              key={`${difficulty}-${resetTrigger ? 1 : 0}`}
+              component={motion.div}
+              initial={{ opacity: 0, y: 10, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.985 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              sx={{
+                height: '100%',
+                maxWidth: '100%',
+                aspectRatio: { xs: `${boardColsXs}/${boardRowsXs}`, sm: `${boardColsSm}/${boardRowsSm}` },
+                display: 'grid',
+                gridTemplateColumns: { xs: `repeat(${boardColsXs}, 1fr)`, sm: `repeat(${boardColsSm}, 1fr)` },
+                gridAutoRows: '1fr',
+                gap: { xs: 0.9, sm: 1.2 },
+                p: { xs: 1, sm: 1.25 },
+                borderRadius: 2.5,
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              {cards.map(card => (
+                <Box key={card.id} sx={{ minWidth: 0, minHeight: 0 }}>
+                  <Card
+                    value={card.value}
+                    isFlipped={card.isFlipped}
+                    isMatched={card.isMatched}
+                    shake={shakeIds.includes(card.id)}
+                    pulse={pulseIds.includes(card.id)}
+                    onClick={() => handleCardClick(card.id)}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </AnimatePresence>
+        </Box>
 
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2 }}>
-          <Button variant="contained" onClick={initializeGame} fullWidth size="large">
-            New game
-          </Button>
-          <Button variant="outlined" onClick={() => setModalOpen(true)} fullWidth size="large" startIcon={<LeaderboardIcon />}>
-            Scores
-          </Button>
-        </Stack>
       </Paper>
     </Container>
   );
