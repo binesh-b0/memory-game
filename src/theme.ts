@@ -10,7 +10,7 @@ export const theme = createTheme({
       paper: alpha('#0B1020', 0.78),
     },
   },
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: 10 },
   typography: {
     fontFamily: [
       'Inter',
@@ -58,14 +58,14 @@ export const theme = createTheme({
       styleOverrides: {
         root: ({ theme }) => ({
           padding: 2,
-          borderRadius: 14,
+          borderRadius: 12,
           backgroundColor: alpha(theme.palette.common.white, 0.035),
           border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
         }),
         grouped: {
           margin: 2,
           border: 0,
-          borderRadius: 12,
+          borderRadius: 10,
         },
       },
     },
@@ -98,7 +98,7 @@ export const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          borderRadius: 18,
+          borderRadius: 14,
           border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
         }),
       },

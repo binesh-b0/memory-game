@@ -179,7 +179,7 @@ export default function App() {
           p: { xs: 2, sm: 3 },
           width: '100%',
           position: 'relative',
-          borderRadius: 3,
+          borderRadius: 2.5,
           boxShadow: '0 22px 70px rgba(0,0,0,0.55)',
           backdropFilter: 'blur(14px)',
           overflow: 'hidden',
@@ -204,7 +204,7 @@ export default function App() {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setShowGameOver(false)} variant="outlined">
+            <Button onClick={() => setShowGameOver(false)} variant="outlined" size="small">
               Close
             </Button>
             <Button
@@ -213,6 +213,7 @@ export default function App() {
                 setShowGameOver(false);
               }}
               variant="contained"
+              size="small"
             >
               Play again
             </Button>
@@ -240,7 +241,7 @@ export default function App() {
             </List>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setModalOpen(false)} variant="outlined">
+            <Button onClick={() => setModalOpen(false)} variant="outlined" size="small">
               Close
             </Button>
           </DialogActions>
@@ -269,7 +270,7 @@ export default function App() {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setNewGameOpen(false)} variant="outlined">
+            <Button onClick={() => setNewGameOpen(false)} variant="outlined" size="small">
               Cancel
             </Button>
             <Button
@@ -282,6 +283,7 @@ export default function App() {
                 initializeGame();
               }}
               variant="contained"
+              size="small"
             >
               Start
             </Button>
@@ -366,7 +368,7 @@ export default function App() {
               sx={{
                 flex: 1,
                 p: 1.25,
-                borderRadius: 3,
+                borderRadius: 2.5,
                 backgroundColor: 'rgba(255,255,255,0.03)',
               }}
             >
@@ -422,7 +424,7 @@ export default function App() {
                 gridAutoRows: '1fr',
                 gap: { xs: 0.9, sm: 1.2 },
                 p: { xs: 1, sm: 1.25 },
-                borderRadius: 2.5,
+                borderRadius: 2,
                 backgroundColor: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.06)',
               }}
