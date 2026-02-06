@@ -48,10 +48,24 @@ export default function App() {
   const { highScores, addHighScore } = useHighScores();
   const [modalOpen, setModalOpen] = useState(false);
   const savedScoreRef = useRef(false);
+  const initializeGameRef = useRef(initializeGame);
+  const prevDifficultyRef = useRef<Difficulty>(difficulty);
+
+  const difficultyLocked = moves > 0 && !showGameOver;
 
   useEffect(() => {
-    initializeGame();
+    initializeGameRef.current = initializeGame;
   }, [initializeGame]);
+
+  useEffect(() => {
+    initializeGameRef.current();
+  }, []);
+
+  useEffect(() => {
+    if (prevDifficultyRef.current === difficulty) return;
+    prevDifficultyRef.current = difficulty;
+    initializeGame();
+  }, [difficulty, initializeGame]);
 
   useEffect(() => {
     if (!gameStarted || gameOver) return;
@@ -116,10 +130,12 @@ export default function App() {
     <Container 
       maxWidth="md"
       sx={{
-        py: { xs: 3, sm: 5 },
-        minHeight: '100vh',
+        py: { xs: 2, sm: 3 },
+        height: '100dvh',
+        maxHeight: '100dvh',
         display: 'grid',
         placeItems: 'center',
+        overflow: 'hidden',
       }}
     >
       <Paper
@@ -131,6 +147,9 @@ export default function App() {
           borderRadius: 4,
           boxShadow: '0 22px 70px rgba(0,0,0,0.55)',
           backdropFilter: 'blur(14px)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Dialog open={showGameOver} onClose={() => setShowGameOver(false)}>
@@ -198,16 +217,24 @@ export default function App() {
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-            <ToggleButtonGroup
-              value={difficulty}
-              exclusive
-              onChange={(_, value: Difficulty | null) => value && setDifficulty(value)}
-              size="small"
-            >
-              <ToggleButton value="easy">Easy</ToggleButton>
-              <ToggleButton value="medium">Medium</ToggleButton>
-              <ToggleButton value="hard">Hard</ToggleButton>
-            </ToggleButtonGroup>
+            <Tooltip title={difficultyLocked ? 'Difficulty is locked during a game' : 'Difficulty'}>
+              <Box>
+                <ToggleButtonGroup
+                  value={difficulty}
+                  exclusive
+                  onChange={(_, value: Difficulty | null) => {
+                    if (!value || difficultyLocked) return;
+                    setDifficulty(value);
+                  }}
+                  size="small"
+                  disabled={difficultyLocked}
+                >
+                  <ToggleButton value="easy">Easy</ToggleButton>
+                  <ToggleButton value="medium">Medium</ToggleButton>
+                  <ToggleButton value="hard">Hard</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </Tooltip>
             <Tooltip title="High scores">
               <IconButton onClick={() => setModalOpen(true)} aria-label="High scores">
                 <LeaderboardIcon />

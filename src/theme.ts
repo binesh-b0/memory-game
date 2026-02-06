@@ -28,7 +28,7 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
-        'html, body, #root': { height: '100%' },
+        'html, body, #root': { height: '100%', overflow: 'hidden' },
         body: {
           margin: 0,
           backgroundColor: '#070A14',
@@ -38,6 +38,7 @@ export const theme = createTheme({
             'radial-gradient(900px circle at 35% 110%, rgba(16,185,129,0.12), transparent 55%)',
           ].join(','),
           backgroundAttachment: 'fixed',
+          overscrollBehavior: 'none',
         },
         '*': { boxSizing: 'border-box' },
       },
