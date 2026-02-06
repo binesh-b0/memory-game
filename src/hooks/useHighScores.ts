@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { loadHighScores, saveHighScores } from '../utils/storage';
 
 type HighScore = {
@@ -12,17 +12,22 @@ export const useHighScores = () => {
   const [highScores, setHighScores] = useState<HighScore[]>([]);
 
   useEffect(() => {
-    setHighScores(loadHighScores());
-  }, []);
-
-  const addHighScore = (name: string, moves: number, timeLeft: number) => {
-    const newScore = { name, moves, timeLeft, timestamp: Date.now() };
-    const updatedScores = [...highScores, newScore]
+    const scores = loadHighScores()
       .sort((a, b) => a.moves - b.moves)
       .slice(0, 10);
-    setHighScores(updatedScores);
-    saveHighScores(updatedScores);
-  };
+    setHighScores(scores);
+  }, []);
+
+  const addHighScore = useCallback((name: string, moves: number, timeLeft: number) => {
+    setHighScores(prev => {
+      const newScore = { name, moves, timeLeft, timestamp: Date.now() };
+      const updatedScores = [...prev, newScore]
+        .sort((a, b) => a.moves - b.moves)
+        .slice(0, 10);
+      saveHighScores(updatedScores);
+      return updatedScores;
+    });
+  }, []);
 
   return { highScores, addHighScore };
 };

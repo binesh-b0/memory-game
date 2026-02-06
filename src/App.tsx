@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import useGameLogic from './hooks/useGameLogic';
 import { useHighScores } from './hooks/useHighScores';
 import Card from './components/Card';
 import {
-  CircularProgress,
   Button,
   Container,
   Typography,
   Box,
   Paper,
-  Select,
-  MenuItem,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -18,36 +16,43 @@ import {
   Tooltip,
   List,
   ListItem,
-  ListItemButton
+  ListItemText,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  IconButton,
+  Chip,
+  Divider,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 const DIFFICULTY_SETTINGS = {
   easy: { pairs: 4, moveLimit: 20, timeLimit: 60 },
   medium: { pairs: 6, moveLimit: 30, timeLimit: 90 },
   hard: { pairs: 8, moveLimit: 40, timeLimit: 120 }
-};
+} as const;
+
+type Difficulty = keyof typeof DIFFICULTY_SETTINGS;
 
 export default function App() {
-  // Game states
-  const [difficulty, setDifficulty] = useState<keyof typeof DIFFICULTY_SETTINGS>('easy');
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const { pairs, moveLimit, timeLimit } = DIFFICULTY_SETTINGS[difficulty];
   const { cards, matches, moves, gameOver, initializeGame, handleCardClick, resetTrigger } = useGameLogic(pairs);
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
   const [gameStarted, setGameStarted] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const { highScores, addHighScore } = useHighScores();
   const [modalOpen, setModalOpen] = useState(false);
+  const savedScoreRef = useRef(false);
 
+  useEffect(() => {
+    initializeGame();
+  }, [initializeGame]);
 
-  const handleDifficultyChange = (event: SelectChangeEvent<keyof typeof DIFFICULTY_SETTINGS>) => {
-    setDifficulty(event.target.value as keyof typeof DIFFICULTY_SETTINGS);
-  };
-
-  // Timer management
   useEffect(() => {
     if (!gameStarted || gameOver) return;
 
@@ -64,35 +69,48 @@ export default function App() {
     return () => clearInterval(timer);
   }, [gameStarted, gameOver]);
 
-  // Game over conditions
   useEffect(() => {
-    if (gameOver || timeLeft === 0 || moves >= moveLimit) {
+    if (!gameStarted && moves === 0) return;
+
+    const hasWon = matches.length === pairs;
+    const outOfTime = timeLeft === 0;
+    const outOfMoves = moves >= moveLimit;
+
+    if (hasWon && !savedScoreRef.current) {
+      savedScoreRef.current = true;
+      addHighScore('Player', moves, timeLeft);
+    }
+
+    if (hasWon || gameOver || outOfTime || outOfMoves) {
       setShowGameOver(true);
       setGameStarted(false);
     }
-    if (matches.length === pairs) {
-      addHighScore('Player', moves, timeLeft);
-    }
-  }, [gameOver, timeLeft, moves, moveLimit]);
+  }, [addHighScore, gameOver, gameStarted, matches.length, moveLimit, moves, pairs, timeLeft]);
 
-  // Reset game state
   useEffect(() => {
     setTimeLeft(timeLimit);
     setGameStarted(false);
     setShowGameOver(false);
+    savedScoreRef.current = false;
   }, [resetTrigger, timeLimit]);
 
-  // Start game when first move is made
   useEffect(() => {
     if (moves > 0 && !gameStarted) {
       setGameStarted(true);
     }
   }, [moves, gameStarted]);
 
-  const latestHighScore = highScores.reduce((latest, score) => {
-    return score.moves < latest.moves ? score : latest;
-  }, highScores[0]);
-  
+  const bestScore = useMemo(() => {
+    if (highScores.length === 0) return null;
+    return [...highScores].sort((a, b) => a.moves - b.moves)[0];
+  }, [highScores]);
+
+  const movesLeft = Math.max(moveLimit - moves, 0);
+  const boardColumns = difficulty === 'medium' ? { xs: 'repeat(4, 1fr)', sm: 'repeat(6, 1fr)' } : { xs: 'repeat(4, 1fr)', sm: 'repeat(4, 1fr)' };
+  const hasWon = matches.length === pairs;
+  const outOfTime = timeLeft === 0;
+  const outOfMoves = moves >= moveLimit;
+  const showBestLabel = bestScore ? `Best: ${bestScore.moves} moves` : 'No scores yet';
 
   return (
     <Container 
@@ -115,167 +133,179 @@ export default function App() {
           backdropFilter: 'blur(14px)',
         }}
       >
-        {/* Game Over Overlay */}
         <Dialog open={showGameOver} onClose={() => setShowGameOver(false)}>
-          <DialogTitle>
-            {matches.length === pairs ? '🎉 Congratulations!' : 'Game Over'}
-          </DialogTitle>
+          <DialogTitle>{hasWon ? 'You win' : 'Game over'}</DialogTitle>
           <DialogContent>
-            {matches.length === pairs ? (
-              <Typography>You won in {moves} moves!</Typography>
-            ) : (
-              <Typography>Better luck next time!</Typography>
-            )}
+            <Stack spacing={1}>
+              <Typography color="text.secondary">
+                {hasWon ? 'Clean match.' : outOfTime ? 'Out of time.' : outOfMoves ? 'Out of moves.' : 'Try again.'}
+              </Typography>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                <Chip icon={<AutorenewIcon />} label={`${moves} moves`} variant="outlined" />
+                <Chip icon={<AccessTimeIcon />} label={`${timeLeft}s left`} variant="outlined" />
+                <Chip icon={<CheckCircleIcon />} label={`${matches.length}/${pairs} matched`} variant="outlined" />
+              </Stack>
+            </Stack>
           </DialogContent>
           <DialogActions>
+            <Button onClick={() => setShowGameOver(false)} variant="outlined">
+              Close
+            </Button>
             <Button
               onClick={() => {
                 initializeGame();
                 setShowGameOver(false);
               }}
+              variant="contained"
             >
-              Play Again
+              Play again
             </Button>
           </DialogActions>
         </Dialog>
 
-        {/* Header Section */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Select
-            value={difficulty}
-            onChange={handleDifficultyChange}
-            size="small"
-            sx={{ minWidth: 120 }}
-          >
-            <MenuItem value="easy">Easy</MenuItem>
-            <MenuItem value="medium">Medium</MenuItem>
-            <MenuItem value="hard">Hard</MenuItem>
-          </Select>
-          {/* High Score */}
-          <Typography 
-          variant="h6"
-           sx={{ fontWeight: 'light', cursor: 'pointer' }}
-           onClick={() => setModalOpen(true)}
-           >
-            {latestHighScore ? `Top: ${latestHighScore.moves} moves` : 'No High Score'}
-          </Typography>
-          <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
-        <DialogTitle>High Scores</DialogTitle>
-        <DialogContent>
-          <List sx={{ p: 0 }} disablePadding>
-          {highScores.map((score, index) => (
-            <ListItem key={score.timestamp}>
-              <ListItemButton>
-              {index + 1}. {score.name} - {score.moves} moves
-              </ListItemButton>              
-            </ListItem>
+        <Dialog open={modalOpen} onClose={() => setModalOpen(false)} fullWidth maxWidth="xs">
+          <DialogTitle>High scores</DialogTitle>
+          <DialogContent>
+            <List sx={{ p: 0 }} disablePadding>
+              {highScores.length === 0 ? (
+                <ListItem disablePadding>
+                  <ListItemText primary="No scores yet." secondary="Win a game to save your best run." />
+                </ListItem>
+              ) : (
+                highScores.map((score, index) => (
+                  <ListItem key={score.timestamp} disablePadding sx={{ py: 0.75 }}>
+                    <ListItemText
+                      primary={`${index + 1}. ${score.name}`}
+                      secondary={`${score.moves} moves • ${score.timeLeft}s left`}
+                    />
+                  </ListItem>
+                ))
+              )}
+            </List>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setModalOpen(false)} variant="outlined">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between">
+          <Box>
+            <Typography variant="h4">Memory match</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Flip two cards. Match all pairs before time or moves run out.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+            <ToggleButtonGroup
+              value={difficulty}
+              exclusive
+              onChange={(_, value: Difficulty | null) => value && setDifficulty(value)}
+              size="small"
+            >
+              <ToggleButton value="easy">Easy</ToggleButton>
+              <ToggleButton value="medium">Medium</ToggleButton>
+              <ToggleButton value="hard">Hard</ToggleButton>
+            </ToggleButtonGroup>
+            <Tooltip title="High scores">
+              <IconButton onClick={() => setModalOpen(true)} aria-label="High scores">
+                <LeaderboardIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </Stack>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
+          <Chip icon={<EmojiEventsIcon />} label={showBestLabel} variant="outlined" />
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}>
+            <Chip label={`${pairs * 2} cards`} variant="outlined" />
+            <Chip label={`${movesLeft} moves left`} variant="outlined" />
+          </Stack>
+        </Stack>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+          {[
+            {
+              key: 'time',
+              label: 'Time',
+              value: `${timeLeft}s`,
+              progress: (timeLeft / timeLimit) * 100,
+              icon: <AccessTimeIcon fontSize="small" />,
+              color: 'secondary.main',
+            },
+            {
+              key: 'moves',
+              label: 'Moves',
+              value: `${movesLeft}`,
+              progress: (moves / moveLimit) * 100,
+              icon: <AutorenewIcon fontSize="small" />,
+              color: 'primary.main',
+            },
+            {
+              key: 'matches',
+              label: 'Matched',
+              value: `${matches.length}/${pairs}`,
+              progress: (matches.length / pairs) * 100,
+              icon: <CheckCircleIcon fontSize="small" />,
+              color: 'success.main',
+            },
+          ].map(stat => (
+            <Paper
+              key={stat.key}
+              variant="outlined"
+              sx={{
+                flex: 1,
+                p: 1.25,
+                borderRadius: 3,
+                backgroundColor: 'rgba(255,255,255,0.03)',
+              }}
+            >
+              <Stack direction="row" spacing={1.25} alignItems="center">
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress
+                    variant="determinate"
+                    value={Math.min(100, Math.max(0, stat.progress))}
+                    size={56}
+                    thickness={4}
+                    sx={{ color: stat.color, opacity: 0.95 }}
+                  />
+                  <Box
+                    sx={{
+                      inset: 0,
+                      position: 'absolute',
+                      display: 'grid',
+                      placeItems: 'center',
+                      color: 'text.secondary',
+                    }}
+                  >
+                    {stat.icon}
+                  </Box>
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {stat.label}
+                  </Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 750, lineHeight: 1.1 }}>
+                    {stat.value}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Paper>
           ))}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setModalOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-        </Box>
+        </Stack>
 
-        {/* Game Stats (Graphical Metrics) */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, mb: 3 }}>
-          {/* Time Left */}
-          <Tooltip title="Time Left" placement="top">
-          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress
-              variant="determinate"
-              value={(timeLeft / timeLimit) * 100}
-              size={60}
-              thickness={4}
-              color="primary"
-            />
-            <Box
-              sx={{
-                top: 0,
-                left: 0,
-                bottom: 0,
-                right: 0,
-                position: 'absolute',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <AccessTimeIcon fontSize="small" />
-              <Typography variant="caption">{timeLeft}s</Typography>
-            </Box>
-          </Box>
-          </Tooltip>
-
-          {/* Moves */}
-          <Tooltip title="Moves left" placement="top">
-          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress
-              variant="determinate"
-              value={(moves / moveLimit) * 100}
-              size={60}
-              thickness={4}
-              color="secondary"
-            />
-            <Box
-              sx={{
-                top: 0,
-                left: 0,
-                bottom: 0,
-                right: 0,
-                position: 'absolute',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <AutorenewIcon fontSize="small" />
-              <Typography variant="caption">{moves}</Typography>
-            </Box>
-          </Box>
-          </Tooltip>
-
-          {/* Matched */}
-          <Tooltip title="Matches" placement="top">
-
-          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress
-              variant="determinate"
-              value={(matches.length / pairs) * 100}
-              size={60}
-              thickness={4}
-              sx={{ color: '#4caf50' }}
-              />
-            <Box
-              sx={{
-                top: 0,
-                left: 0,
-                bottom: 0,
-                right: 0,
-                position: 'absolute',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              >
-              <CheckCircleIcon fontSize="small" />
-              <Typography variant="caption">{matches.length}</Typography>
-            </Box>
-          </Box>
-              </Tooltip>
-        </Box>
-
-        {/* Game Board */}
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(4, 1fr)', sm: 'repeat(6, 1fr)' },
-            gap: 2,
-            mb: 3
+            gridTemplateColumns: boardColumns,
+            gap: { xs: 1.25, sm: 1.75 },
+            p: { xs: 1.25, sm: 2 },
+            borderRadius: 3,
+            backgroundColor: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           {cards.map(card => (
@@ -290,17 +320,14 @@ export default function App() {
           ))}
         </Box>
 
-        {/* Controls */}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={initializeGame}
-          fullWidth
-          size="large"
-          sx={{ mt: 2 }}
-        >
-          New Game
-        </Button>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2 }}>
+          <Button variant="contained" onClick={initializeGame} fullWidth size="large">
+            New game
+          </Button>
+          <Button variant="outlined" onClick={() => setModalOpen(true)} fullWidth size="large" startIcon={<LeaderboardIcon />}>
+            Scores
+          </Button>
+        </Stack>
       </Paper>
     </Container>
   );
