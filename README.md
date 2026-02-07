@@ -44,3 +44,9 @@ npm install
 ```bash
 npm run dev
 ```
+
+## GitHub Pages
+
+If the live site shows a blank page, make sure GitHub Pages is set to deploy via **GitHub Actions**:
+
+- Repo **Settings** → **Pages** → **Build and deployment** → **Source**: `GitHub Actions`
